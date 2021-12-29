@@ -1,44 +1,42 @@
-require_relative './journey'
-require_relative './station'
+require_relative './balance_error'
 
 class Oystercard
-    attr_reader :balance, :entry_station, :exit_station, :journeys
 
-    LIMIT = 90
-    MINIMUM_FARE = 1
-    
+  attr_reader :balance
 
-    def initialize(balance = 0)
-        @balance = balance
-        @journey = Journey.new
-        @journeys = []
-    end
+  BALANCE_LIMIT = 90
+  MINIMUM_CHARGE = 1
 
-    def top_up(amount)
-        (@balance + amount) > LIMIT ? fail("Balance cannot exceed £#{LIMIT}.") : @balance += amount
-    end 
+  def initialize(journey_log: JourneyLog.new)
+    @balance = 0
+    @journey_log = journey_log
+  end
 
-    
-    def touch_in(station)
-        raise "Insufficient balance." unless @balance >= MINIMUM_FARE
-        @journey.start(station)
-    end 
-    
-    def touch_out(station)
-        @journeys << @journey.finish(station)
-        deduct(@journey.fare)
-    end
-    
-    # def in_journey?    
-    #     !!entry_station
-    # end 
-    
+  def top_up(amount)
+    fail(BalanceError, "Exceeds #{BALANCE_LIMIT}") if over_limit?(amount) 
+    @balance += amount
+  end
 
-    private
-    
-    def deduct(fare)
-        @balance -= fare
-    end
+  def touch_in(station)
+    fail(BalanceError, "Insufficient balance to touch in.") if balance < MINIMUM_CHARGE
+    deduct(journey_log.outstanding_charges)
+    journey_log.start_journey(station)
+  end
 
+  def touch_out(station)
+    journey = journey_log.exit_journey(station)
+    deduct(journey.fare)
+  end
+
+  private
+
+  attr_reader :journey_log
+
+  def over_limit?(amount)
+    (amount + balance) > BALANCE_LIMIT
+  end
+
+  def deduct(amount)
+    @balance -= amount
+  end
 end
-

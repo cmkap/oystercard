@@ -42,16 +42,3 @@ class Oystercard
 
 end
 
-# GOAL - we wanna save the entry station
-# Where doo we get the station? "station"
-# Where do we store the station? @entry_station
-# at touch_in set @entry_station to "station"
-# at touch_out set @entry_station to nil
-# What is our double?
-
-# Goal - refactor in_journey 
-# in_journey relies on entry station
-
-# !!nil   #=> false
-# !!"abc" #=> true
-# !!false #=> false
